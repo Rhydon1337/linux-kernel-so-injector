@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAYJOR_NUMBER 1337
+#define MAYJOR_NUMBER 510
 
 #define DEVICE_NAME "Injector"
 

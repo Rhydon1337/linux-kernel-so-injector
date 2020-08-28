@@ -1,12 +1,6 @@
-MODULE_NAME = kernel_injector
-
-SRCS = ioctl.c main.c device_handlers.c
-
-OBJS =  $(SRCS:.c=.o)
-
-obj-m += $(MODULE_MAME).o
-$(MODULE_MAME)-y = $(OBJS)
-
+obj-m	:= kernel_injector.o
+kernel_injector-y := main.o device_handlers.o ioctl.o
+ 
 KERNELDIR ?= ~/workspace/buildroot-2020.02.4/output/build/linux-4.19.91
 PWD       := $(shell pwd)
  
