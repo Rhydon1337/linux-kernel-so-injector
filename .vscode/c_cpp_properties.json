@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "defines": [
+                "__KERNEL__",
+                "MODULE"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "gcc-x64",
+            "includePath": [
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/arch/x86/include",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/arch/x86/include/generated",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/include",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/arch/x86/include/uapi",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/arch/x86/include/generated/uapi",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/include/uapi",
+                "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/include/generated/uapi",
+                "/usr/lib/gcc/x86_64-linux-gnu/7/include"
+            ],
+            "compilerArgs": [
+                "-nostdinc",
+                "-include", "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/include/linux/kconfig.h",
+                "-include", "/home/rhydon/workspace/buildroot-2020.02.4/output/build/linux-4.19.91/include/linux/compiler_types.h"
+            ]
+        }
+    ],
+    "version": 4
+}
