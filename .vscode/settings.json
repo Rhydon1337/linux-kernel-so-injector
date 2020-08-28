@@ -34,6 +34,6 @@
         "**/modules.order": true,
         "**/Module.symvers": true,
         "**/Mkfile.old": true,
-        "**/dkms.conf": true
+        "**/dkms.conf": true,
     }
 }
