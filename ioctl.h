@@ -8,8 +8,8 @@ typedef struct {
 
 #define IOCTL_INJECT_SHELLCODE _IOR(1337, 1, char*)
 
-ShellcodeInjectionParameters inject_shellcode_ioctl_parser();
+int inject_shellcode_ioctl_parser(unsigned long arg, ShellcodeInjectionParameters* parameters);
 
-int inject_shellcode_ioctl_handler(char* message);
+int inject_shellcode_ioctl_handler(unsigned long arg);
 
-int inject_shellcode(int pid, void* shellcode, unsigned int len);
+int inject_shellcode(ShellcodeInjectionParameters* parameters);
