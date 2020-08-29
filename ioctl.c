@@ -8,9 +8,8 @@
 int inject_shellcode_ioctl_parser(unsigned long arg, ShellcodeInjectionParameters* parameters) {
     unsigned long status;
     void* shellcode_usermode_address;
-    __get_user(parameters->pid, (int *)arg);
-    __get_user(shellcode_usermode_address, (void **)(arg + sizeof(int)));
-    __get_user(parameters->shellcode_size, (unsigned int *) (arg + sizeof(int) + sizeof(void*)));
+    status = copy_from_user((void*)parameters, (void*)arg, sizeof(ShellcodeInjectionParameters));
+    shellcode_usermode_address = parameters->shellcode;
     parameters->shellcode = kmalloc(parameters->shellcode_size, GFP_KERNEL);
     status = copy_from_user(parameters->shellcode, shellcode_usermode_address, parameters->shellcode_size);
     if (SUCCESS != status) {
