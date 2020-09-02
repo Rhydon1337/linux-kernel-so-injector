@@ -24,18 +24,20 @@ int inject_shellcode_ioctl_parser(unsigned long arg, ShellcodeInjectionParameter
 
 int inject_shellcode(ShellcodeInjectionParameters* parameters) {
     int status;
-    struct task_struct* task;
+    struct task_struct* target_task;
+    struct task_struct* prev_task;
+    struct pid* pid_struct;
     printk(KERN_INFO "Start injecting the shellcode to pid %d\n", parameters->pid);
-    task = find_task_by_vpid(parameters->pid);
-    if (NULL == task) {
+    pid_struct = find_get_pid(parameters->pid);
+    target_task = pid_task(pid_struct, PIDTYPE_PID);
+    if (NULL == target_task) {
         return INVALID_PID;
     }
-    status = send_sig(SIGSTOP, task, KERNEL_PRIV);
+    status = send_sig(SIGSTOP, target_task, KERNEL_PRIV);
     if (0 > status) {
         printk(KERN_INFO "Unable to stop the process, pid %d\n", parameters->pid);
         return SIGSTOP_FAILED;
     }
-
     return SUCCESS;
 }
 
