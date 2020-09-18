@@ -35,7 +35,7 @@ int inject_so(SoInjectionParameters* parameters) {
     struct task_struct* target_task;
     struct pid* pid_struct;
     void* free_addr;
-    void* lib_address;
+    void* libc_address;
     void* symbol_address;
 
     printk(KERN_INFO "Start injecting the so to pid %d\n", parameters->pid);
@@ -62,18 +62,14 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The free address is: %lx\n", (unsigned long)free_addr);
 
-    lib_address = find_lib_address(parameters->pid, "libc");
-    if (NULL == lib_address) {
-        lib_address = find_lib_address(parameters->pid, "uClibc");
-    }
-    
-    if (NULL == lib_address) {
-        printk(KERN_INFO "Unable to find any lib in the process, pid %d\n", parameters->pid);
+    libc_address = find_lib_address(parameters->pid, "libc");
+    if (NULL == libc_address) {
+        printk(KERN_INFO "Unable to find any libc in the process, pid %d\n", parameters->pid);
         goto release_process;
     }
-    printk(KERN_INFO "The address of the found lib is: %lx\n", (unsigned long)lib_address);
+    printk(KERN_INFO "The address of the found lib is: %lx\n", (unsigned long)libc_address);
 
-    symbol_address = get_symbol_address(target_task, lib_address, "write");
+    symbol_address = get_symbol_address(target_task, libc_address, "system");
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
 
 release_process:

@@ -83,8 +83,8 @@ void* get_symbol_address(struct task_struct* task, void* module_base_address, co
         return NULL;
     }
     
-    symbol_string_table = (unsigned long)get_dynamic_table(task, DT_STRTAB, dynamic_tables) + (unsigned long)module_base_address;
-    symbol_table = (unsigned long)get_dynamic_table(task, DT_SYMTAB, dynamic_tables) + (unsigned long)module_base_address;
+    symbol_string_table = (unsigned long)get_dynamic_table(task, DT_STRTAB, dynamic_tables);
+    symbol_table = (unsigned long)get_dynamic_table(task, DT_SYMTAB, dynamic_tables);
 
     if (NULL == (void*)symbol_table || NULL == (void*)symbol_string_table) {
         return NULL;

@@ -47,8 +47,6 @@ void* find_lib_address(pid_t pid, char* library) {
 	return (void*)addr;
 }
 
-
-
 void* find_executable_space(pid_t pid) {
 	struct file* fp;
 	char filename[30];
