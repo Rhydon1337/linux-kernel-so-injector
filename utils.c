@@ -116,7 +116,7 @@ ssize_t mem_rw(struct task_struct *task, char *buf, size_t count, loff_t *ppos, 
 	while (count > 0) {
 		int this_len = min_t(int, count, PAGE_SIZE);
 
-		if (write && copy_from_user(page, buf, this_len)) {
+		if (write && memcpy(page, buf, this_len)) {
 			copied = -EFAULT;
 			break;
 		}
@@ -128,7 +128,7 @@ ssize_t mem_rw(struct task_struct *task, char *buf, size_t count, loff_t *ppos, 
 			break;
 		}
 
-		if (!write && copy_to_user(buf, page, this_len)) {
+		if (!write && memcpy(buf, page, this_len)) {
 			copied = -EFAULT;
 			break;
 		}
@@ -146,12 +146,12 @@ free:
 	return copied;
 }
 
-ssize_t mem_read(struct task_struct* task, char *buf, size_t count, unsigned long long pos) {
+ssize_t mem_read(struct task_struct* task, char *buf, size_t count, unsigned long pos) {
 	loff_t ppos = pos;
 	return mem_rw(task, buf, count, &ppos, 0);
 }
 
-ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned long long pos) {
+ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned long pos) {
 	loff_t ppos = pos;
 	return mem_rw(task, buf, count, &ppos, 1);
 }

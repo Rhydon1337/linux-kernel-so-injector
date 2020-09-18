@@ -73,14 +73,8 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The address of the found lib is: %lx\n", (unsigned long)lib_address);
 
-    char ELF[10];
-    mem_read(target_task, ELF, 10, 0);
-    printk(KERN_INFO "The address of the symbol is: %s\n", ELF);
-
-    /*
     symbol_address = get_symbol_address(target_task, lib_address, "__libc_dlopen_mode");
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
-    */
 
 release_process:
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
