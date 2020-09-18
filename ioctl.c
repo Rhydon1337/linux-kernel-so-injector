@@ -3,20 +3,20 @@
 #include <linux/slab.h>
 
 #include "consts.h"
-#include "shellcode_injector.h"
+#include "so_injector.h"
 
-int inject_shellcode_ioctl_handler(unsigned long arg) {
+int inject_so_ioctl_handler(unsigned long arg) {
     int status;
-    ShellcodeInjectionParameters parameters;
-    status = inject_shellcode_ioctl_parser(arg, &parameters);
+    SoInjectionParameters parameters;
+    status = inject_so_ioctl_parser(arg, &parameters);
     if (SUCCESS != status) {
         return status;
     }
-    status = inject_shellcode(&parameters);
+    status = inject_so(&parameters);
     if (SUCCESS != status) {
-        kfree(parameters.shellcode);
+        kfree(parameters.so);
         return status;
     }
-    kfree(parameters.shellcode);
+    kfree(parameters.so);
     return SUCCESS;
 }

@@ -18,9 +18,9 @@ long device_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
     printk(KERN_ALERT "ioctl handler\n");
     switch (cmd)
     {
-    case IOCTL_INJECT_SHELLCODE:
-    	printk(KERN_ALERT "Call shellcode ioctl handler\n");
-        status = inject_shellcode_ioctl_handler(arg);
+    case IOCTL_INJECT_SHARED_OBJECT:
+    	printk(KERN_ALERT "Call so ioctl handler\n");
+        status = inject_so_ioctl_handler(arg);
         break;
     
     default:

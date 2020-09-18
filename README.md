@@ -1,2 +1,2 @@
 # kernel-injector
-Linux kernel mode to user mode shellcode injection
+Linux kernel mode to user mode so injection
