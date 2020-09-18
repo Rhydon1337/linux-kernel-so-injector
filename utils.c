@@ -116,7 +116,7 @@ ssize_t mem_rw(struct task_struct *task, char *buf, size_t count, loff_t *ppos, 
 	while (count > 0) {
 		int this_len = min_t(int, count, PAGE_SIZE);
 
-		if (write && memcpy(page, buf, this_len)) {
+		if (write && NULL == memcpy(page, buf, this_len)) {
 			copied = -EFAULT;
 			break;
 		}
@@ -128,7 +128,7 @@ ssize_t mem_rw(struct task_struct *task, char *buf, size_t count, loff_t *ppos, 
 			break;
 		}
 
-		if (!write && memcpy(buf, page, this_len)) {
+		if (!write && NULL == memcpy(buf, page, this_len)) {
 			copied = -EFAULT;
 			break;
 		}
