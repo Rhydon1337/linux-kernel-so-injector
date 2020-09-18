@@ -121,7 +121,7 @@ ssize_t mem_rw(struct task_struct *task, char *buf, size_t count, loff_t *ppos, 
 			break;
 		}
 
-		this_len = access_remote_vm(mm, addr, page, this_len, flags);
+		this_len = access_process_vm(task, addr, page, this_len, flags);
 		if (!this_len) {
 			if (!copied)
 				copied = -EIO;
@@ -146,10 +146,12 @@ free:
 	return copied;
 }
 
-ssize_t mem_read(struct task_struct* task, char *buf, size_t count, loff_t *ppos) {
-	return mem_rw(task, buf, count, ppos, 0);
+ssize_t mem_read(struct task_struct* task, char *buf, size_t count, unsigned long long pos) {
+	loff_t ppos = pos;
+	return mem_rw(task, buf, count, &ppos, 0);
 }
 
-ssize_t mem_write(struct task_struct* task, char *buf, size_t count, loff_t *ppos) {
-	return mem_rw(task, buf, count, ppos, 1);
+ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned long long pos) {
+	loff_t ppos = pos;
+	return mem_rw(task, buf, count, &ppos, 1);
 }
