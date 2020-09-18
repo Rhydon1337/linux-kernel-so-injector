@@ -62,7 +62,7 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The free address is: %lx\n", (unsigned long)free_addr);
 
-    libc_address = find_lib_address(parameters->pid, "libc");
+    libc_address = find_lib_address(parameters->pid, "libc-");
     if (NULL == libc_address) {
         printk(KERN_INFO "Unable to find any libc in the process, pid %d\n", parameters->pid);
         goto release_process;
