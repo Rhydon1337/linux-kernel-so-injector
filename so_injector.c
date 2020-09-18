@@ -55,6 +55,7 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The process stopped successfully, pid %d\n", parameters->pid);
 
+    // find free space for writing the so name
     free_addr = find_executable_space(parameters->pid);
     if (NULL == free_addr) {
         printk(KERN_INFO "Unable to find free space in the process, pid %d\n", parameters->pid);
@@ -62,6 +63,7 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The free address is: %lx\n", (unsigned long)free_addr);
 
+    // find libc for the injection
     libc_address = find_lib_address(parameters->pid, "libc-");
     if (NULL == libc_address) {
         printk(KERN_INFO "Unable to find any libc in the process, pid %d\n", parameters->pid);
@@ -69,7 +71,8 @@ int inject_so(SoInjectionParameters* parameters) {
     }
     printk(KERN_INFO "The address of the found lib is: %lx\n", (unsigned long)libc_address);
 
-    symbol_address = get_symbol_address(target_task, libc_address, "system");
+    // find __libc_dlopen_mode for loading the injected so
+    symbol_address = get_symbol_address(target_task, libc_address, "__libc_dlopen_mode");
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
 
 release_process:
