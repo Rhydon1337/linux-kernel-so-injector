@@ -3,8 +3,8 @@
 
 typedef struct {
     int pid;
-    void* so;
-    unsigned int so_size;
+    char* so_path;
+    size_t so_path_size;
 } SoInjectionParameters;
 
 int inject_so_ioctl_parser(unsigned long arg, SoInjectionParameters* parameters);

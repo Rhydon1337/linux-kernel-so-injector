@@ -14,9 +14,9 @@ int inject_so_ioctl_handler(unsigned long arg) {
     }
     status = inject_so(&parameters);
     if (SUCCESS != status) {
-        kfree(parameters.so);
+        kfree(parameters.so_path);
         return status;
     }
-    kfree(parameters.so);
+    kfree(parameters.so_path);
     return SUCCESS;
 }

@@ -9,20 +9,23 @@
 #include <linux/mm.h>
 #include <linux/kallsyms.h>
 #include <uapi/asm-generic/mman-common.h>
+#include <linux/sched/task_stack.h>
+#include <uapi/asm/ptrace.h>
 
 #include "consts.h"
 #include "utils.h"
 #include "elf.h"
+#include "so_shellcode_loader.h"
 
 #define KERNEL_PRIV 1
 
 int inject_so_ioctl_parser(unsigned long arg, SoInjectionParameters* parameters) {
     unsigned long status;
-    void* so_usermode_address;
+    void* so_path;
     status = copy_from_user((void*)parameters, (void*)arg, sizeof(SoInjectionParameters));
-    so_usermode_address = parameters->so;
-    parameters->so = kmalloc(parameters->so_size, GFP_KERNEL);
-    status = copy_from_user(parameters->so, so_usermode_address, parameters->so_size);
+    so_path = parameters->so_path;
+    parameters->so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
+    status = copy_from_user(parameters->so_path, so_path, parameters->so_path_size);
     if (SUCCESS != status) {
         return -EFAULT;
     }
@@ -74,6 +77,8 @@ int inject_so(SoInjectionParameters* parameters) {
     // find __libc_dlopen_mode for loading the injected so
     symbol_address = get_symbol_address(target_task, libc_address, "__libc_dlopen_mode");
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
+
+    
 
 release_process:
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
