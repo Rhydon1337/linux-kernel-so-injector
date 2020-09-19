@@ -24,8 +24,11 @@ int inject_so_ioctl_parser(unsigned long arg, SoInjectionParameters* parameters)
     void* so_path;
     status = copy_from_user((void*)parameters, (void*)arg, sizeof(SoInjectionParameters));
     so_path = parameters->so_path;
-    parameters->so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
+    // include the null-terminator
+    parameters->so_path = kmalloc(parameters->so_path_size + 1, GFP_KERNEL);
+    memset(parameters->so_path, 0, parameters->so_path_size + 1);
     status = copy_from_user(parameters->so_path, so_path, parameters->so_path_size);
+    parameters->so_path_size++;
     if (SUCCESS != status) {
         return -EFAULT;
     }
@@ -40,6 +43,10 @@ int inject_so(SoInjectionParameters* parameters) {
     void* free_addr;
     void* libc_address;
     void* symbol_address;
+    void* shellcode;
+    void* prev_code_before_writing_so_path;
+    void* prev_code_before_writing_shellcode;
+    size_t shellcode_size;
 
     printk(KERN_INFO "Start injecting the so to pid %d\n", parameters->pid);
     
@@ -69,17 +76,64 @@ int inject_so(SoInjectionParameters* parameters) {
     // find libc for the injection
     libc_address = find_lib_address(parameters->pid, "libc-");
     if (NULL == libc_address) {
-        printk(KERN_INFO "Unable to find any libc in the process, pid %d\n", parameters->pid);
+        printk(KERN_INFO "Unable to find libc in the process, pid %d\n", parameters->pid);
         goto release_process;
     }
-    printk(KERN_INFO "The address of the found lib is: %lx\n", (unsigned long)libc_address);
+    printk(KERN_INFO "The address of the found libc is: %lx\n", (unsigned long)libc_address);
 
     // find __libc_dlopen_mode for loading the injected so
     symbol_address = get_symbol_address(target_task, libc_address, "__libc_dlopen_mode");
+    if (NULL == symbol_address)
+    {
+        printk(KERN_INFO "Unable to find the symbol address, pid %d\n", parameters->pid);
+        goto release_process;
+    }
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
 
-    
+    // get the shellcode parsed and patched to correct addresses
+    shellcode = get_shellcode(&shellcode_size, task_pt_regs(target_task), (unsigned long)free_addr, (unsigned long)symbol_address);
+    if (NULL == shellcode) {
+        printk(KERN_INFO "Unable to get the shellcode\n");
+        goto release_process;
+    }
 
+    // read the current code on the wanted address
+    prev_code_before_writing_so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
+    if(parameters->so_path_size != mem_read(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr)) {
+        printk(KERN_INFO "Unable to read the current code on the wanted address, pid %d\n", parameters->pid);
+        goto release_process;
+    }
+
+    // write to so path to process memory include the null-terminator
+    if(parameters->so_path_size != mem_write(target_task, parameters->so_path, parameters->so_path_size, (unsigned long)free_addr)) {
+        printk(KERN_INFO "Unable to write the so path to process memory, pid %d\n", parameters->pid);
+        goto release_process;
+    }
+    
+    // read the current code on the wanted address
+    prev_code_before_writing_shellcode = kmalloc(shellcode_size, GFP_KERNEL);
+    if(parameters->so_path_size != mem_read(target_task, prev_code_before_writing_shellcode, shellcode_size, (unsigned long)free_addr + parameters->so_path_size)) {
+        printk(KERN_INFO "Unable to read the current code on the wanted address, pid %d\n", parameters->pid);
+        goto write_prev_code_before_writing_so_path;
+    }
+    
+    // write to so path to process memory include the null-terminator
+    if(shellcode_size != mem_write(target_task, shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size)) {
+        printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
+        goto write_prev_code_before_writing_so_path;
+    }
+    
+    // wait until loading complete
+    while (true) {
+        if (NULL != find_lib_address(parameters->pid, parameters->so_path)) {
+            break;
+        }
+        
+    }
+
+    mem_write(target_task, prev_code_before_writing_shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size);
+write_prev_code_before_writing_so_path:
+    mem_write(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr);
 release_process:
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
     return status;
