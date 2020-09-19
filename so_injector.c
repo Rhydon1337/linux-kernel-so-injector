@@ -97,8 +97,6 @@ int inject_so(SoInjectionParameters* parameters) {
         goto release_process;
     }
     
-    /*
-
     // read the current code on the wanted address
     prev_code_before_writing_so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
     if(parameters->so_path_size != mem_read(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr)) {
@@ -114,7 +112,7 @@ int inject_so(SoInjectionParameters* parameters) {
     
     // read the current code on the wanted address
     prev_code_before_writing_shellcode = kmalloc(shellcode_size, GFP_KERNEL);
-    if(parameters->so_path_size != mem_read(target_task, prev_code_before_writing_shellcode, shellcode_size, (unsigned long)free_addr + parameters->so_path_size)) {
+    if(shellcode_size != mem_read(target_task, prev_code_before_writing_shellcode, shellcode_size, (unsigned long)free_addr + parameters->so_path_size)) {
         printk(KERN_INFO "Unable to read the current code on the wanted address, pid %d\n", parameters->pid);
         goto write_prev_code_before_writing_so_path;
     }
@@ -124,7 +122,7 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
         goto write_prev_code_before_writing_so_path;
     }
-
+    task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size;
     
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
 
@@ -134,13 +132,13 @@ int inject_so(SoInjectionParameters* parameters) {
             break;
         }
     }
-    */
+   
 
     mem_write(target_task, prev_code_before_writing_shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size);
     kfree(prev_code_before_writing_shellcode);
 write_prev_code_before_writing_so_path:
     mem_write(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr);
-    kfree(prev_code_before_writing_so_path);
+    kfree(prev_code_before_writing_so_path); 
 release_process:
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
     return status;

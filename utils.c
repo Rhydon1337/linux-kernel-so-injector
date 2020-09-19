@@ -167,5 +167,5 @@ void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned 
 	memcpy(shellcode_patched + 26, (void*)&so_library_name, sizeof(unsigned long));
 	memcpy(shellcode_patched + 58, (void*)&registers->ip, sizeof(unsigned long) / 2);
 	memcpy(shellcode_patched + 63, (void*)&registers->ip + sizeof(unsigned long) / 2, sizeof(unsigned long) / 2);
-	return shellcode;
+	return shellcode_patched;
 }

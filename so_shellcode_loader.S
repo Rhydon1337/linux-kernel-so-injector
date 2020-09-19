@@ -5,6 +5,7 @@
 
 #define RTLD_NOW  0x00002 
         .text
+        .align 16
         .global shellcode
         .global end_of_shellcode
 shellcode:
