@@ -96,6 +96,8 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to get the shellcode\n");
         goto release_process;
     }
+    
+    /*
 
     // read the current code on the wanted address
     prev_code_before_writing_so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
@@ -122,18 +124,23 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
         goto write_prev_code_before_writing_so_path;
     }
+
     
+    send_sig(SIGCONT, target_task, KERNEL_PRIV);
+
     // wait until loading complete
     while (true) {
         if (NULL != find_lib_address(parameters->pid, parameters->so_path)) {
             break;
         }
-        
     }
+    */
 
     mem_write(target_task, prev_code_before_writing_shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size);
+    kfree(prev_code_before_writing_shellcode);
 write_prev_code_before_writing_so_path:
     mem_write(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr);
+    kfree(prev_code_before_writing_so_path);
 release_process:
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
     return status;

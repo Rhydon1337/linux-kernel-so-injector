@@ -1,3 +1,8 @@
+#define MAGIC_SO_PATH 0x1234567890abcdea
+#define MAGIC_PREV_IP_FIRST_HALF 0x12345678
+#define MAGIC_PREV_IP_SECOND_HALF 0x12345678
+#define MAGIC_SO_LOAD_FUNCTION 0x1234567890abcded
+
 #define RTLD_NOW  0x00002 
         .text
         .global shellcode
@@ -15,10 +20,11 @@ shellcode:
         pushq %r10
         pushq %r11
 
-        movq $0xffffffffffffffff, %rdi 
+        movq $MAGIC_SO_LOAD_FUNCTION, %rax
+        movq $MAGIC_SO_PATH, %rdi 
         movq $RTLD_NOW, %rsi
-        call 0xffffffffffffffff
-        
+        callq *%rax
+
         popq %r11
         popq %r10
         popq %r9
@@ -30,6 +36,9 @@ shellcode:
         popq %rcx
         popq %rax
 
-        jmp 0xffffffffffffffff
+        pushq $MAGIC_PREV_IP_FIRST_HALF
+        pushq $MAGIC_PREV_IP_SECOND_HALF
+        ret
+        
 end_of_shellcode:
         .end
