@@ -45,8 +45,6 @@ int inject_so(SoInjectionParameters* parameters) {
     void* libc_address;
     void* symbol_address;
     void* shellcode;
-    void* prev_code_before_writing_so_path;
-    void* prev_code_before_writing_shellcode;
     size_t shellcode_size;
 
     printk(KERN_INFO "Start injecting the so to pid %d\n", parameters->pid);
@@ -98,49 +96,27 @@ int inject_so(SoInjectionParameters* parameters) {
         goto release_process;
     }
     
-    // read the current code on the wanted address
-    prev_code_before_writing_so_path = kmalloc(parameters->so_path_size, GFP_KERNEL);
-    if(parameters->so_path_size != mem_read(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr)) {
-        printk(KERN_INFO "Unable to read the current code on the wanted address, pid %d\n", parameters->pid);
-        goto release_process;
-    }
-
     // write to so path to process memory include the null-terminator
     if(parameters->so_path_size != mem_write(target_task, parameters->so_path, parameters->so_path_size, (unsigned long)free_addr)) {
         printk(KERN_INFO "Unable to write the so path to process memory, pid %d\n", parameters->pid);
-        goto release_process;
-    }
-    
-    // read the current code on the wanted address
-    prev_code_before_writing_shellcode = kmalloc(shellcode_size, GFP_KERNEL);
-    if(shellcode_size != mem_read(target_task, prev_code_before_writing_shellcode, shellcode_size, (unsigned long)free_addr + parameters->so_path_size)) {
-        printk(KERN_INFO "Unable to read the current code on the wanted address, pid %d\n", parameters->pid);
-        goto write_prev_code_before_writing_so_path;
+        goto release_shellcode;
     }
     
     // write to so path to process memory include the null-terminator
     if(shellcode_size != mem_write(target_task, shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size)) {
         printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
-        goto write_prev_code_before_writing_so_path;
+        goto release_shellcode;
     }
+    
+    // ensure for nop sled
     task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size + 5;
     
+    // continue the target process in order to execute our so shellcode loader
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
     is_stopped = false;
 
-    // wait until loading complete
-    while (true) {
-        if (NULL != find_lib_address(parameters->pid, parameters->so_path)) {
-            break;
-        }
-    }
-   
+release_shellcode:
     kfree(shellcode);
-    mem_write(target_task, prev_code_before_writing_shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size);
-    kfree(prev_code_before_writing_shellcode);
-write_prev_code_before_writing_so_path:
-    mem_write(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr);
-    kfree(prev_code_before_writing_so_path); 
 release_process:
     if (is_stopped) {
         send_sig(SIGCONT, target_task, KERNEL_PRIV);
