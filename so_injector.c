@@ -38,6 +38,7 @@ int inject_so_ioctl_parser(unsigned long arg, SoInjectionParameters* parameters)
 
 int inject_so(SoInjectionParameters* parameters) {
     int status;
+    bool is_stopped;
     struct task_struct* target_task;
     struct pid* pid_struct;
     void* free_addr;
@@ -52,7 +53,7 @@ int inject_so(SoInjectionParameters* parameters) {
     
     // find the target process
     pid_struct = find_get_pid(parameters->pid);
-    target_task = pid_task(pid_struct, PIDTYPE_PID);
+    target_task = pid_task(pid_struct, PIDTYPE_TGID);
     if (NULL == target_task) {
         return INVALID_PID;
     }
@@ -63,6 +64,7 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to stop the process, pid %d\n", parameters->pid);
         return SIGSTOP_FAILED;
     }
+    is_stopped = true;
     printk(KERN_INFO "The process stopped successfully, pid %d\n", parameters->pid);
 
     // find free space for writing the so name
@@ -89,7 +91,6 @@ int inject_so(SoInjectionParameters* parameters) {
         goto release_process;
     }
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
-
     // get the shellcode parsed and patched to correct addresses
     shellcode = get_shellcode(&shellcode_size, task_pt_regs(target_task), (unsigned long)free_addr, (unsigned long)symbol_address);
     if (NULL == shellcode) {
@@ -122,9 +123,10 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
         goto write_prev_code_before_writing_so_path;
     }
-    task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size;
+    task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size + 5;
     
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
+    is_stopped = false;
 
     // wait until loading complete
     while (true) {
@@ -133,13 +135,15 @@ int inject_so(SoInjectionParameters* parameters) {
         }
     }
    
-
+    kfree(shellcode);
     mem_write(target_task, prev_code_before_writing_shellcode, shellcode_size,  (unsigned long)free_addr + parameters->so_path_size);
     kfree(prev_code_before_writing_shellcode);
 write_prev_code_before_writing_so_path:
     mem_write(target_task, prev_code_before_writing_so_path, parameters->so_path_size, (unsigned long)free_addr);
     kfree(prev_code_before_writing_so_path); 
 release_process:
-    send_sig(SIGCONT, target_task, KERNEL_PRIV);
+    if (is_stopped) {
+        send_sig(SIGCONT, target_task, KERNEL_PRIV);
+    }
     return status;
 }
