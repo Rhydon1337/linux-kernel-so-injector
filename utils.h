@@ -12,4 +12,4 @@ ssize_t mem_read(struct task_struct* task, char *buf, size_t count, unsigned lon
 
 ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned long pos);
 
-void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned long so_library_name, unsigned long load_so_function);
+void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned long so_library_name, unsigned long load_so_function, bool came_from_syscall);

@@ -155,9 +155,15 @@ ssize_t mem_write(struct task_struct* task, char *buf, size_t count, unsigned lo
 	return mem_rw(task, buf, count, &ppos, 1);
 }
 
-void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned long so_library_name, unsigned long load_so_function) {
+void* get_shellcode(size_t* shellcode_size, struct pt_regs* registers, unsigned long so_library_name, unsigned long load_so_function, bool came_from_syscall) {
 	void* shellcode_patched;
-	unsigned long ip = registers->ip - 2;
+	unsigned long ip;
+	if (came_from_syscall) {
+		ip = registers->ip - 2;
+	}
+	else {
+		ip = registers->ip;
+	}
 	*shellcode_size = (unsigned long)end_of_shellcode - (unsigned long)shellcode;
 	if (0 >= *shellcode_size){
 		return NULL;

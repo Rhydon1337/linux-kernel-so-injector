@@ -11,6 +11,7 @@
 #include <uapi/asm-generic/mman-common.h>
 #include <linux/sched/task_stack.h>
 #include <uapi/asm/ptrace.h>
+#include <asm/syscall.h>
 
 #include "consts.h"
 #include "utils.h"
@@ -46,7 +47,7 @@ int inject_so(SoInjectionParameters* parameters) {
     void* symbol_address;
     void* shellcode;
     size_t shellcode_size;
-
+    bool came_from_syscall;
     printk(KERN_INFO "Start injecting the so to pid %d\n", parameters->pid);
     
     // find the target process
@@ -89,8 +90,17 @@ int inject_so(SoInjectionParameters* parameters) {
         goto release_process;
     }
     printk(KERN_INFO "The address of the symbol is: %lx\n", (unsigned long)symbol_address);
+    
+     // did we stopped from a system call? 
+    if  (syscall_get_nr(target_task, task_pt_regs(target_task)) >= 0){
+        came_from_syscall = true;
+    }
+    else {
+        came_from_syscall = false;
+    }
+    
     // get the shellcode parsed and patched to correct addresses
-    shellcode = get_shellcode(&shellcode_size, task_pt_regs(target_task), (unsigned long)free_addr, (unsigned long)symbol_address);
+    shellcode = get_shellcode(&shellcode_size, task_pt_regs(target_task), (unsigned long)free_addr, (unsigned long)symbol_address, came_from_syscall);
     if (NULL == shellcode) {
         printk(KERN_INFO "Unable to get the shellcode\n");
         goto release_process;
@@ -107,9 +117,14 @@ int inject_so(SoInjectionParameters* parameters) {
         printk(KERN_INFO "Unable to write the shellcode to process memory, pid %d\n", parameters->pid);
         goto release_shellcode;
     }
-    
-    // ensure for nop sled
-    task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size + 5;
+
+    // did we stopped from a system call? 
+    if  (came_from_syscall){
+        task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size + 2;
+    }
+    else {
+        task_pt_regs(target_task)->ip = (unsigned long)free_addr + parameters->so_path_size;
+    }
     
     // continue the target process in order to execute our so shellcode loader
     send_sig(SIGCONT, target_task, KERNEL_PRIV);
