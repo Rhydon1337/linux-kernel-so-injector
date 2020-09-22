@@ -14,12 +14,14 @@ The injection process is divided into several stages:
 3. Find libc address using /proc/PID/maps
 4. Parse libc elf at runtime to find __libc_dlopen_mode
 5. Write to target process memory the so file path
-6. Build our shellcode (get_shellcode function) with the correct address of:
+6. Get the target process rip register 
+7. Build our shellcode (get_shellcode function) with the correct address of:
     * So file path
     * Previous rip register address (in order to reconsturct the running of the process after loading the so from our shellcode)
     * __libc_dlopen_mode address (using this function in libc, we will load our so)
-7. Write the shellcode to target process memory
-8. Send SIGCONT to target process
+8. Write the shellcode to target process memory
+9. Set target process rip register to the shellcode address
+10. Send SIGCONT to target process
 
 The whole process described above is happing at the kernel module.
 The only things that the kernel module needs are: target pid, so file path.
