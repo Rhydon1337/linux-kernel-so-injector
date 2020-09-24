@@ -23,7 +23,7 @@ The injection process is divided into several stages:
 9. Set target process rip register to the shellcode address
 10. Send SIGCONT to target process
 
-The whole process described above is happing at the kernel module.
+The whole process described above happens at the kernel module.
 The only things that the kernel module needs are: target pid, so file path.
 
 ## Limitations
