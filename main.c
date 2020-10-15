@@ -28,15 +28,15 @@ struct cdev g_cdev;
 struct class* g_cl;     
 
 static int driver_initialization(void)
-{		
-	int ret_val;
-	printk(KERN_INFO "hello...\n");
-	ret_val = register_chrdev(MAYJOR_NUMBER, DEVICE_NAME, &fops);
-	if (ret_val < 0) {
-    	printk (KERN_ERR "Sorry, registering the character device failed with %d\n", ret_val);
-		return ret_val;
-	}
-	ret_val = alloc_chrdev_region( &g_first_device, 0, 1, DEVICE_NAME);
+{
+    int ret_val;
+    printk(KERN_INFO "hello...\n");
+    ret_val = register_chrdev(MAYJOR_NUMBER, DEVICE_NAME, &fops);
+    if (ret_val < 0) {
+        printk (KERN_ERR "Sorry, registering the character device failed with %d\n", ret_val);
+        return ret_val;
+    }
+    ret_val = alloc_chrdev_region( &g_first_device, 0, 1, DEVICE_NAME);
     if( 0 > ret_val)
     {
         printk( KERN_ALERT "Device Registration failed\n" );
@@ -72,11 +72,11 @@ static int driver_initialization(void)
  
 static void driver_exit(void)
 {
-	cdev_del(&g_cdev);
+    cdev_del(&g_cdev);
     device_destroy(g_cl, g_first_device);
     class_destroy(g_cl);
     unregister_chrdev_region(g_first_device, 1);
-	printk(KERN_ALERT "Device unregistered\n");
+    printk(KERN_ALERT "Device unregistered\n");
 }
 
 module_init(driver_initialization);
