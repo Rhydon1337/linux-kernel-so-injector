@@ -33,4 +33,4 @@ The only things that the kernel module needs are: target pid, so file path.
 * The shellcode and so path won't cleaned because I didn't have enough time to implement it from different kernel thread, but there is a commit which all the cleanup code available. However, the kernel thread isn't and without the creation of new kernel thread it will stick the injection.
 * The reconstruction isn't fully (r15 isn't restored).
 
-All of the limitations which mentioned above except for the first one (more research is needed for supporting blocking syscalls) could be solved.
+All of the limitations which mentioned above could be solved.
