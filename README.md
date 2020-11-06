@@ -27,7 +27,7 @@ The whole process described above happens at the kernel module.
 The only things that the kernel module needs are: target pid, so file path.
 
 ## Limitations
-* Currently there is no support for processes which blocked by syscalls (e.g, waitpid).
+* Currently there is no support for syscalls from the type that need EINTR or restart_syscall when stopped by signal.
 * Currently implemented only for x86_64.
 * This code isn't robust or fully tested. Therefore, you should expect bugs to occur under certain conditions when process getting non-stop signals or other edge cases.
 * The shellcode and so path won't cleaned because I didn't have enough time to implement it from different kernel thread, but there is a commit which all the cleanup code available. However, the kernel thread isn't and without the creation of new kernel thread it will stick the injection.
